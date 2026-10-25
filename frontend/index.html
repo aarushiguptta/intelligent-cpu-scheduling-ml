@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intelligent CPU Scheduling | ML & Traditional OS Schedulers</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body class="dark-theme">
+  <!-- Header Navigation -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="4" width="16" height="16" rx="2"/>
+            <rect x="9" y="9" width="6" height="6"/>
+            <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 14h3M1 9h3M1 14h3"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="app-title">Intelligent CPU Scheduling</h1>
+          <p class="app-subtitle">Machine Learning Telemetry vs. Traditional OS Scheduling Algorithms</p>
+        </div>
+      </div>
+      <div class="header-controls">
+        <span class="badge badge-cpp">C++17 Engine</span>
+        <span class="badge badge-ml">Scikit-Learn ML</span>
+        <span class="badge badge-status" id="engineStatusBadge">Engine: Active</span>
+        <button id="themeToggleBtn" class="btn btn-icon" title="Toggle Theme">
+          <span id="themeIcon">☀️</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content">
+    
+    <!-- Top Grid: Configuration, Presets, and Process Table -->
+    <section class="config-grid">
+      
+      <!-- Card 1: Simulation Controls -->
+      <div class="card config-card">
+        <div class="card-header">
+          <h2 class="card-title">1. Simulation Parameters</h2>
+          <span class="card-tag">Core Engine</span>
+        </div>
+        <div class="card-body">
+          <div class="form-group">
+            <label for="algorithmSelect">Scheduling Configuration</label>
+            <select id="algorithmSelect" class="form-control">
+              <option value="ALL" selected>⚡ All 6 Configurations (Side-by-Side Comparison)</option>
+              <option value="FCFS">First-Come First-Served (FCFS)</option>
+              <option value="ROUND_ROBIN">Round Robin (RR)</option>
+              <option value="ORACLE_SJF">Oracle SJF (True Burst Baseline)</option>
+              <option value="ESTIMATED_SJF">Estimated SJF (Historical / EMA)</option>
+              <option value="ADAPTIVE_RR">Adaptive Round Robin (Dynamic Quantum)</option>
+              <option value="ML_SJF_HYBRID">ML-SJF Hybrid (Aging + Demotion)</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col">
+              <label for="quantumInput">Time Quantum (RR)</label>
+              <div class="input-with-unit">
+                <input type="number" id="quantumInput" class="form-control" value="2.0" min="0.5" max="50" step="0.5">
+                <span class="unit">ms</span>
+              </div>
+            </div>
+            <div class="form-group col">
+              <label for="csOverheadInput">Context Switch Overhead</label>
+              <div class="input-with-unit">
+                <input type="number" id="csOverheadInput" class="form-control" value="0.0" min="0.0" max="5.0" step="0.1">
+                <span class="unit">ms</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col">
+              <label for="agingFactorInput">Aging Factor (α)</label>
+              <input type="number" id="agingFactorInput" class="form-control" value="0.15" min="0.0" max="2.0" step="0.05" title="Reduces effective SJF burst score over wait time to prevent starvation">
+            </div>
+            <div class="form-group col">
+              <label for="fallbackQuantumInput">Fallback RR Quantum</label>
+              <div class="input-with-unit">
+                <input type="number" id="fallbackQuantumInput" class="form-control" value="2.0" min="0.5" max="20" step="0.5" title="Quantum assigned to processes demoted after exceeding predicted burst">
+                <span class="unit">ms</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="mlModelSelect">ML Predictor Model</label>
+            <select id="mlModelSelect" class="form-control">
+              <option value="decision_tree" selected>Decision Tree Regressor (Low Latency ~330µs)</option>
+              <option value="random_forest">Random Forest Regressor (Ensemble ~13ms)</option>
+              <option value="gradient_boosting">Gradient Boosting Regressor (Boosting ~420µs)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Workload Generator & Presets -->
+      <div class="card workload-card">
+        <div class="card-header">
+          <h2 class="card-title">2. Workload Generator & Presets</h2>
+          <span class="card-tag">Synthetic Telemetry</span>
+        </div>
+        <div class="card-body">
+          <div class="form-row">
+            <div class="form-group col">
+              <label for="workloadSelect">Workload Type</label>
+              <select id="workloadSelect" class="form-control">
+                <option value="mixed" selected>Mixed (Interactive + Batch)</option>
+                <option value="cpu_bound">CPU-Bound (High compute, long bursts)</option>
+                <option value="io_bound">I/O-Bound (Short bursts, rapid yields)</option>
+                <option value="heavy_tailed">Heavy-Tailed (Pareto 80/20 power law)</option>
+                <option value="bursty">Bursty (Clustered Poisson spikes)</option>
+              </select>
+            </div>
+            <div class="form-group col-sm">
+              <label for="workloadCount">Count</label>
+              <input type="number" id="workloadCount" class="form-control" value="7" min="2" max="50">
+            </div>
+          </div>
+
+          <div class="btn-group-row">
+            <button id="generateWorkloadBtn" class="btn btn-secondary">
+              <span>⚡ Generate Workload</span>
+            </button>
+            <div class="dropdown">
+              <button id="presetsBtn" class="btn btn-outline">Textbook Presets ▾</button>
+              <div id="presetsMenu" class="dropdown-menu hidden">
+                <button class="dropdown-item" data-preset="textbook_sjf">Silberschatz SJF Comparison</button>
+                <button class="dropdown-item" data-preset="convoy_effect">Convoy Effect Demo (FCFS vs RR)</button>
+                <button class="dropdown-item" data-preset="starvation_aging">Starvation & Aging Stress Test</button>
+                <button class="dropdown-item" data-preset="simultaneous_arrival">Simultaneous Arrivals at t=0</button>
+                <button class="dropdown-item" data-preset="misprediction_test">Extreme ML Underestimation</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="workload-info-box" id="workloadDescBox">
+            <div class="info-title" id="workloadInfoTitle">Mixed Workload</div>
+            <p class="info-text" id="workloadInfoText">Loading workload profile...</p>
+            <div class="io-note-toggle" id="ioNoteToggle">ℹ️ View I/O Blocking Simulation Modeling Note</div>
+            <div class="io-note-content hidden" id="ioNoteContent"></div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Process Table Card -->
+    <section class="card process-table-card">
+      <div class="card-header">
+        <div class="header-left">
+          <h2 class="card-title">Process Ready Pool</h2>
+          <span class="badge" id="processCountBadge">7 processes</span>
+        </div>
+        <div class="table-actions">
+          <button id="addProcessBtn" class="btn btn-sm btn-outline">+ Add Process</button>
+          <button id="clearProcsBtn" class="btn btn-sm btn-outline btn-danger-text">Clear All</button>
+          <button id="exportJsonBtn" class="btn btn-sm btn-outline">Export JSON</button>
+          <button id="runSimulationBtn" class="btn btn-primary btn-run">
+            <span class="play-icon">▶</span> Run Simulation
+          </button>
+        </div>
+      </div>
+      <div class="card-body no-padding">
+        <div class="table-container">
+          <table class="process-table" id="processTable">
+            <thead>
+              <tr>
+                <th>PID</th>
+                <th>Arrival Time (ms)</th>
+                <th>Actual Burst (ms)</th>
+                <th>Category</th>
+                <th>Priority / Nice</th>
+                <th>Memory (MB)</th>
+                <th>Past Avg Burst</th>
+                <th>Predicted Burst (ML)</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="processTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Simulation Progress Banner -->
+    <div id="simulationLoader" class="sim-loader hidden">
+      <div class="spinner"></div>
+      <p>Executing C++ Simulation Engine & Running Scikit-Learn Inference Pipeline...</p>
+    </div>
+
+    <!-- Results Section (Visible after simulation) -->
+    <section id="resultsSection" class="results-container">
+      
+      <!-- Key Metric Highlights -->
+      <div class="metrics-cards-grid" id="metricsCardsGrid">
+        <!-- Dynamically rendered summary badges -->
+      </div>
+
+      <!-- Side-by-Side Algorithm Benchmark Table -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Comparative Algorithm Performance Benchmark</h2>
+          <span class="card-tag">Empirical Results</span>
+        </div>
+        <div class="card-body no-padding">
+          <div class="table-container">
+            <table class="benchmark-table" id="benchmarkTable">
+              <thead>
+                <tr>
+                  <th>Algorithm</th>
+                  <th>Avg Waiting Time</th>
+                  <th>Avg Turnaround</th>
+                  <th>Avg Response</th>
+                  <th>Throughput</th>
+                  <th>CPU Utilization</th>
+                  <th>Jain's Fairness Index</th>
+                  <th>Max Wait Time</th>
+                  <th>Context Switches</th>
+                  <th>Starved Jobs</th>
+                </tr>
+              </thead>
+              <tbody id="benchmarkTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comparative Performance Charts -->
+      <div class="charts-grid">
+        <div class="card chart-card">
+          <div class="card-header">
+            <h3 class="card-title">Latency Comparison (Lower is Better)</h3>
+          </div>
+          <div class="card-body">
+            <canvas id="latencyChart"></canvas>
+          </div>
+        </div>
+        <div class="card chart-card">
+          <div class="card-header">
+            <h3 class="card-title">Throughput & Fairness Metrics</h3>
+          </div>
+          <div class="card-body">
+            <canvas id="fairnessChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gantt Chart Timelines -->
+      <div class="card gantt-card">
+        <div class="card-header">
+          <div class="header-left">
+            <h2 class="card-title">CPU Execution Timelines (Gantt Charts)</h2>
+          </div>
+          <div class="gantt-legend">
+            <span class="legend-item"><span class="dot dot-sjf"></span> SJF Queue</span>
+            <span class="legend-item"><span class="dot dot-rr"></span> Round Robin / Fallback</span>
+            <span class="legend-item"><span class="dot dot-cs"></span> Context Switch</span>
+            <span class="legend-item"><span class="dot dot-idle"></span> Idle CPU</span>
+          </div>
+        </div>
+        <div class="card-body" id="ganttChartsContainer">
+          <!-- Dynamically populated Gantt rows -->
+        </div>
+      </div>
+
+      <!-- Machine Learning Diagnostics & Telemetry -->
+      <div class="card ml-card">
+        <div class="card-header">
+          <h2 class="card-title">Machine Learning Telemetry & Overhead Assessment</h2>
+          <span class="card-tag">No Assumed Superiority</span>
+        </div>
+        <div class="card-body">
+          <div class="ml-grid">
+            
+            <div class="ml-stats-panel">
+              <h4 class="subheading">Prediction Accuracy Metrics</h4>
+              <div class="stat-row">
+                <span class="stat-label">Model Architecture:</span>
+                <span class="stat-val" id="mlModelNameVal">-</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Mean Absolute Error (MAE):</span>
+                <span class="stat-val highlight" id="mlMaeVal">- ms</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Root Mean Squared Error (RMSE):</span>
+                <span class="stat-val" id="mlRmseVal">- ms</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Mean Absolute % Error (MAPE):</span>
+                <span class="stat-val" id="mlMapeVal">-%</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Inference Overhead per Process:</span>
+                <span class="stat-val stat-time" id="mlOverheadVal">- µs</span>
+              </div>
+              <div class="stat-row">
+                <span class="stat-label">Total ML Latency:</span>
+                <span class="stat-val" id="mlTotalTimeVal">- ms</span>
+              </div>
+              
+              <div class="academic-callout">
+                <div class="callout-header">⚖️ Empirical OS Analysis:</div>
+                <p id="academicAssessmentText">
+                  Scheduling decisions require microsecond latency. If ML inference overhead exceeds algorithmic waiting-time reduction, or if burst mispredictions cause excessive demotions, traditional Round Robin or Adaptive RR may be more computationally optimal. Review measured numbers above.
+                </p>
+              </div>
+            </div>
+
+            <div class="ml-charts-panel">
+              <h4 class="subheading">Feature Importance in Burst Prediction</h4>
+              <div class="chart-wrapper">
+                <canvas id="featureImportanceChart"></canvas>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed Process Execution Table -->
+      <div class="card">
+        <div class="card-header">
+          <div class="header-left">
+            <h2 class="card-title">Per-Process Execution Details</h2>
+            <select id="detailsAlgoFilter" class="form-control-sm">
+              <!-- Dynamically populated options -->
+            </select>
+          </div>
+        </div>
+        <div class="card-body no-padding">
+          <div class="table-container">
+            <table class="benchmark-table" id="detailsTable">
+              <thead>
+                <tr>
+                  <th>PID</th>
+                  <th>Arrival Time</th>
+                  <th>Actual Burst</th>
+                  <th>Predicted Burst</th>
+                  <th>Start Time</th>
+                  <th>Completion Time</th>
+                  <th>Waiting Time</th>
+                  <th>Turnaround Time</th>
+                  <th>Response Time</th>
+                  <th>Demoted to RR?</th>
+                </tr>
+              </thead>
+              <tbody id="detailsTableBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Add Process Modal -->
+  <div id="addProcessModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Add New Process</h3>
+        <button id="closeModalBtn" class="btn btn-icon">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="addProcessForm">
+          <div class="form-group">
+            <label for="newPid">Process ID</label>
+            <input type="text" id="newPid" class="form-control" required placeholder="e.g. P8">
+          </div>
+          <div class="form-row">
+            <div class="form-group col">
+              <label for="newArrivalTime">Arrival Time (ms)</label>
+              <input type="number" id="newArrivalTime" class="form-control" required value="0" min="0" step="0.5">
+            </div>
+            <div class="form-group col">
+              <label for="newBurstTime">Actual Burst Time (ms)</label>
+              <input type="number" id="newBurstTime" class="form-control" required value="6" min="0.5" step="0.5">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group col">
+              <label for="newCategory">Workload Category</label>
+              <select id="newCategory" class="form-control">
+                <option value="0">0: Interactive / I/O Heavy</option>
+                <option value="1" selected>1: Background / Batch</option>
+                <option value="2">2: Computational Heavy</option>
+                <option value="3">3: System Daemon</option>
+              </select>
+            </div>
+            <div class="form-group col">
+              <label for="newPriority">Priority / Nice</label>
+              <input type="number" id="newPriority" class="form-control" value="0" min="0" max="10">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group col">
+              <label for="newMemory">Memory Footprint (MB)</label>
+              <input type="number" id="newMemory" class="form-control" value="512" min="16" step="16">
+            </div>
+            <div class="form-group col">
+              <label for="newPastBurst">Historical Avg Burst (ms)</label>
+              <input type="number" id="newPastBurst" class="form-control" value="6" min="0.5" step="0.5">
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" id="cancelModalBtn" class="btn btn-secondary">Cancel</button>
+            <button type="submit" class="btn btn-primary">Add Process</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/charts.js"></script>
+  <script src="js/gantt.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

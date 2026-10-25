@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+env/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# macOS
+.DS_Store
+
+# C++ compiled binaries
+cpp/scheduler_engine
+cpp/test_runner
+*.o
+*.out
+
+# Generated model and dataset files
+# Uncomment these if they are generated and not required to run the project:
+# ml/*.pkl
+# ml/*.joblib
+# ml/generated_data/
+
+# IDE
+.vscode/
+.idea/

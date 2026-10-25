@@ -1,0 +1,65 @@
+{
+  "random_forest": {
+    "mae": 3.291,
+    "rmse": 5.4612,
+    "mape_percent": 16.24,
+    "r2_score": 0.8677,
+    "training_time_sec": 0.201,
+    "inference_overhead": {
+      "per_prediction_microseconds": 13657.42,
+      "per_prediction_milliseconds": 13.6574
+    },
+    "feature_importances": {
+      "process_category": 0.0014,
+      "memory_mb": 0.0087,
+      "priority_level": 0.0058,
+      "thread_count": 0.0022,
+      "past_burst_avg": 0.9555,
+      "past_io_rate": 0.009,
+      "arrival_interval": 0.0133,
+      "queue_length_at_arrival": 0.004
+    }
+  },
+  "decision_tree": {
+    "mae": 3.7745,
+    "rmse": 6.7569,
+    "mape_percent": 18.56,
+    "r2_score": 0.7975,
+    "training_time_sec": 0.0088,
+    "inference_overhead": {
+      "per_prediction_microseconds": 331.9,
+      "per_prediction_milliseconds": 0.3319
+    },
+    "feature_importances": {
+      "process_category": 0.0002,
+      "memory_mb": 0.0029,
+      "priority_level": 0.0068,
+      "thread_count": 0.0004,
+      "past_burst_avg": 0.9721,
+      "past_io_rate": 0.0032,
+      "arrival_interval": 0.0132,
+      "queue_length_at_arrival": 0.0012
+    }
+  },
+  "gradient_boosting": {
+    "mae": 3.3676,
+    "rmse": 5.874,
+    "mape_percent": 16.56,
+    "r2_score": 0.847,
+    "training_time_sec": 0.4588,
+    "inference_overhead": {
+      "per_prediction_microseconds": 427.05,
+      "per_prediction_milliseconds": 0.4271
+    },
+    "feature_importances": {
+      "process_category": 0.0005,
+      "memory_mb": 0.0048,
+      "priority_level": 0.0032,
+      "thread_count": 0.0013,
+      "past_burst_avg": 0.9665,
+      "past_io_rate": 0.0074,
+      "arrival_interval": 0.0141,
+      "queue_length_at_arrival": 0.0022
+    }
+  }
+}
